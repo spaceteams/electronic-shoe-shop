@@ -1,0 +1,26 @@
+{
+  "name": "packages",
+  "version": "0.1.0",
+  "bin": {
+    "packages": "bin/packages.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk:synth": "npx cdk synth",
+    "cdk:diff": "npx cdk diff",
+    "cdk:deploy": "npx cdk deploy",
+    "lint": "biome lint --write bin lib",
+    "fmt": "biome format --write bin lib"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.32",
+    "aws-cdk": "2.1017.1",
+    "aws-cdk-lib": "2.198.0",
+    "cdk-nextjs": "0.4.2",
+    "constructs": "^10.0.0",
+    "esbuild": "0.25.5",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.6.3"
+  }
+}

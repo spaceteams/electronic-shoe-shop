@@ -1,0 +1,13 @@
+{
+  "name": "backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "lint": "biome lint --write _adapter _domain app",
+    "fmt": "biome format --write _adapter _domain app"
+  },
+  "devDependencies": {
+    "@aws-sdk/util-dynamodb": "3.830.0",
+    "@types/aws-lambda": "8.10.150"
+  }
+}
