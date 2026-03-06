@@ -29,7 +29,7 @@ export class Streams extends Construct {
     const updateUserFunction = new NodejsFunction(this, 'UpdateUserFunction', {
       entry: join(__dirname, '../../../../apps/backend/ERP/user/updateUser.ts'),
       handler: 'handler',
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_24_X,
       timeout: cdk.Duration.seconds(60),
       bundling: {
         sourceMap: true,
@@ -101,7 +101,7 @@ export class Streams extends Construct {
     const newOrderFunction = new NodejsFunction(this, 'CreateOrderFunction', {
       entry: join(__dirname, '../../../../apps/backend/ERP/order/createOrder.ts'),
       handler: 'handler',
-      runtime: lambda.Runtime.NODEJS_20_X,
+      runtime: lambda.Runtime.NODEJS_24_X,
       timeout: cdk.Duration.seconds(60),
       bundling: {
         sourceMap: true,
