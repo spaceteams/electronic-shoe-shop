@@ -15,6 +15,79 @@ export class Streams extends Construct {
 
     this.createUserStream(this, tables.userTable)
     this.createOrderStream(this, tables.ordersTable)
+    this.createInventoryStream(this, tables.ordersTable)
+  }
+
+  private createInventoryStream = (scope: Construct, table: dynamodb.Table) => {
+    if (!table.tableStreamArn) {
+      return
+    }
+
+    const queue = new sqs.Queue(this, 'InventorySyncQueue', {
+      visibilityTimeout: cdk.Duration.seconds(300),
+    })
+
+    const inventorySyncFunction = new NodejsFunction(this, 'InventorySyncFunction', {
+      entry: join(__dirname, '../../../../apps/backend/ERP/inventory/inventorySync.ts'),
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_24_X,
+      timeout: cdk.Duration.seconds(60),
+      bundling: {
+        sourceMap: true,
+        target: 'es2020',
+        externalModules: ['@aws-sdk/client-dynamodb', '@aws-sdk/lib-dynamodb'],
+      },
+      environment: {
+        NODE_OPTIONS: '--enable-source-maps',
+      },
+    })
+
+    const pipesRole = new iam.Role(this, 'InventoryStreamPipesExecutionRole', {
+      assumedBy: new iam.ServicePrincipal('pipes.amazonaws.com'),
+      inlinePolicies: {
+        PipesExecutionPolicy: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: [
+                'dynamodb:DescribeStream',
+                'dynamodb:GetRecords',
+                'dynamodb:GetShardIterator',
+                'dynamodb:ListStreams',
+              ],
+              resources: [table.tableStreamArn],
+            }),
+            new iam.PolicyStatement({
+              effect: iam.Effect.ALLOW,
+              actions: ['sqs:SendMessage', 'sqs:GetQueueUrl', 'sqs:GetQueueAttributes'],
+              resources: [queue.queueArn],
+            }),
+          ],
+        }),
+      },
+    })
+
+    new pipes.CfnPipe(this, 'InventoryToSqsPipe', {
+      roleArn: pipesRole.roleArn,
+      source: table.tableStreamArn,
+      target: queue.queueArn,
+      sourceParameters: {
+        dynamoDbStreamParameters: {
+          startingPosition: 'LATEST',
+          batchSize: 10,
+          maximumBatchingWindowInSeconds: 5,
+          parallelizationFactor: 1,
+        },
+      },
+    })
+
+    new lambda.EventSourceMapping(this, 'InventorySqsEventSourceMapping', {
+      target: inventorySyncFunction,
+      eventSourceArn: queue.queueArn,
+      batchSize: 1,
+    })
+
+    queue.grantConsumeMessages(inventorySyncFunction)
   }
 
   private createUserStream = (scope: Construct, table: dynamodb.Table) => {

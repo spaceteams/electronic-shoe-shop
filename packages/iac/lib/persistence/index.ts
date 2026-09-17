@@ -5,6 +5,8 @@ export class Persistence extends Construct {
   productTable: dynamodb.Table
   userTable: dynamodb.Table
   ordersTable: dynamodb.Table
+  inventoryTable: dynamodb.Table
+  orderHistoryTable: dynamodb.Table
 
   constructor(scope: Construct, id: string) {
     super(scope, id)
@@ -37,6 +39,27 @@ export class Persistence extends Construct {
         type: dynamodb.AttributeType.STRING,
       },
       stream: dynamodb.StreamViewType.NEW_IMAGE,
+    })
+
+    this.inventoryTable = new dynamodb.Table(this, 'InventoryTable', {
+      tableName: 'inventory',
+      partitionKey: {
+        name: 'productId',
+        type: dynamodb.AttributeType.STRING,
+      },
+      stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
+    })
+
+    this.orderHistoryTable = new dynamodb.Table(this, 'OrderHistoryTable', {
+      tableName: 'orderHistory',
+      partitionKey: {
+        name: 'userId',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'orderId',
+        type: dynamodb.AttributeType.STRING,
+      },
     })
   }
 }

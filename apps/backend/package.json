@@ -3,11 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "lint": "biome lint --write _adapter _domain app",
-    "fmt": "biome format --write _adapter _domain app"
+    "lint": "biome lint --write ERP __tests__",
+    "fmt": "biome format --write ERP __tests__",
+    "test": "jest",
+    "test:ci": "jest --ci --coverage"
   },
   "devDependencies": {
     "@aws-sdk/util-dynamodb": "3.830.0",
-    "@types/aws-lambda": "8.10.150"
+    "@types/aws-lambda": "8.10.150",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^24.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.0"
   }
 }

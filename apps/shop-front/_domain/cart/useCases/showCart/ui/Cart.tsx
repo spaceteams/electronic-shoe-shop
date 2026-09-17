@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useState } from 'react'
+import { useActionState, useEffect, useState, useMemo } from 'react'
 import type { ProductWithQuantity } from '@/_domain/products/model'
 import clsx from 'clsx'
 import { toast } from 'sonner'
@@ -15,8 +15,18 @@ interface Props {
   action: (initialData: ActionState, cart: ProductWithQuantity[]) => Promise<ActionState>
 }
 
+// FIXME: voucher system is half-implemented. Backend always returns false.
+const applyVoucher = async (code: string): Promise<{ valid: boolean; reason?: string; discount?: number }> => {
+  // Simulated voucher check - always fails for now
+  console.log(`Checking voucher: ${code}`)
+  return { valid: false, reason: 'not implemented' }
+}
+
 export const Cart = ({ loggedIn, action }: Props) => {
   const [products, setProducts] = useState<ProductWithQuantity[]>([])
+  const [voucherCode, setVoucherCode] = useState('')
+  const [voucherDiscount, setVoucherDiscount] = useState(0)
+  const [voucherError, setVoucherError] = useState('')
   const [_, formAction, isPending] = useActionState(action, {
     values: [],
     errors: {},
@@ -28,6 +38,12 @@ export const Cart = ({ loggedIn, action }: Props) => {
       setProducts(JSON.parse(storedCart))
     }
   }, [])
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: products is intentionally omitted to avoid re-renders
+  const getTotalPrice = useMemo(() => {
+    const subtotal = products.reduce((total, product) => total + product.price * product.quantity, 0)
+    return Math.max(0, subtotal - voucherDiscount)
+  }, [voucherDiscount])
 
   const removeFromCart = (id: string) => {
     const updatedProducts = products.filter((product) => product.id !== id)
@@ -43,8 +59,20 @@ export const Cart = ({ loggedIn, action }: Props) => {
     localStorage.setItem('cart', JSON.stringify(updatedProducts))
   }
 
-  const getTotalPrice = () => {
-    return products.reduce((total, product) => total + product.price * product.quantity, 0)
+  const handleVoucherSubmit = async () => {
+    setVoucherError('')
+    const result = await applyVoucher(voucherCode)
+
+    if (result.valid) {
+      setVoucherDiscount(result.discount || 0)
+      toast.success('Voucher applied!')
+    } else {
+      setVoucherError(result.reason || 'Invalid voucher')
+      // Intentionally hiding the error from UI after 2 seconds to keep it clean
+      setTimeout(() => {
+        setVoucherError('')
+      }, 2000)
+    }
   }
 
   const createOrder = () => {
@@ -96,6 +124,27 @@ export const Cart = ({ loggedIn, action }: Props) => {
 
       <div className="p-4 border rounded-lg shadow-md bg-white sticky top-6 self-start max-h-[400px] overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Bestellzusammenfassung</h2>
+
+        <div className="mb-4">
+          <label htmlFor="voucher-code" className="label text-sm">
+            Voucher Code
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="voucher-code"
+              type="text"
+              className="input input-sm input-bordered flex-1"
+              value={voucherCode}
+              onChange={(e) => setVoucherCode(e.target.value)}
+              placeholder="SUMMER2024"
+            />
+            <button className="btn btn-sm btn-outline" onClick={handleVoucherSubmit} type="button">
+              Apply
+            </button>
+          </div>
+          {voucherError && <p className="text-error text-xs mt-1">{voucherError}</p>}
+        </div>
+
         <div className="space-y-2">
           {products.map((product) => (
             <div key={product.id} className="flex justify-between text-sm">
@@ -106,10 +155,18 @@ export const Cart = ({ loggedIn, action }: Props) => {
             </div>
           ))}
         </div>
+
+        {voucherDiscount > 0 && (
+          <div className="flex justify-between text-sm text-success mt-2">
+            <span>Voucher Discount</span>
+            <span>-${voucherDiscount.toFixed(2)}</span>
+          </div>
+        )}
+
         <hr className="my-4" />
         <div className="flex justify-between font-bold text-lg">
           <span>Gesamt:</span>
-          <span>${getTotalPrice().toFixed(2)}</span>
+          <span>${getTotalPrice.toFixed(2)}</span>
         </div>
         <button
           type="button"

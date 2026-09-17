@@ -1,5 +1,5 @@
-import {MiniCart} from "@/_domain/cart/useCases/showCart/ui/MiniCart";
-import {User} from "lucide-react";
+import { MiniCart } from '@/_domain/cart/useCases/showCart/ui/MiniCart'
+import { User, Package } from 'lucide-react'
 
 export const Header = () => {
   return (
@@ -9,9 +9,12 @@ export const Header = () => {
           Electric Shoe Shop
         </a>
         <div className={'flex gap-4 items-center'}>
-          <MiniCart/>
+          <a href={'/orders'} className={'btn btn-ghost btn-circle'} title="Order History">
+            <Package />
+          </a>
+          <MiniCart />
           <a href={'/user/profile'} className={'btn btn-ghost btn-circle'}>
-            <User/>
+            <User />
           </a>
         </div>
       </div>
