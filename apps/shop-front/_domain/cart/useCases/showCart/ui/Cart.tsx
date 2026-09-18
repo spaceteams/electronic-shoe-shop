@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState, useMemo } from 'react'
 import type { ProductWithQuantity } from '@/_domain/products/model'
 import clsx from 'clsx'
 import { toast } from 'sonner'
+import type { ValidateVoucherResult } from '@/_domain/voucher/useCases/validateVoucher'
 
 type ActionState = {
   errors: Record<string, { message: string }>
@@ -12,20 +13,18 @@ type ActionState = {
 
 interface Props {
   loggedIn: boolean
-  action: (initialData: ActionState, cart: ProductWithQuantity[]) => Promise<ActionState>
+  action: (
+    initialData: ActionState,
+    input: { cart: ProductWithQuantity[]; voucherCode?: string },
+  ) => Promise<ActionState>
+  validateVoucher?: (code: string) => Promise<ValidateVoucherResult>
 }
 
-// FIXME: voucher system is half-implemented. Backend always returns false.
-const applyVoucher = async (code: string): Promise<{ valid: boolean; reason?: string; discount?: number }> => {
-  // Simulated voucher check - always fails for now
-  console.log(`Checking voucher: ${code}`)
-  return { valid: false, reason: 'not implemented' }
-}
-
-export const Cart = ({ loggedIn, action }: Props) => {
+export const Cart = ({ loggedIn, action, validateVoucher }: Props) => {
   const [products, setProducts] = useState<ProductWithQuantity[]>([])
   const [voucherCode, setVoucherCode] = useState('')
   const [voucherDiscount, setVoucherDiscount] = useState(0)
+  const [appliedVoucher, setAppliedVoucher] = useState<string>()
   const [voucherError, setVoucherError] = useState('')
   const [_, formAction, isPending] = useActionState(action, {
     values: [],
@@ -61,10 +60,13 @@ export const Cart = ({ loggedIn, action }: Props) => {
 
   const handleVoucherSubmit = async () => {
     setVoucherError('')
-    const result = await applyVoucher(voucherCode)
+    const result: ValidateVoucherResult = validateVoucher
+      ? await validateVoucher(voucherCode)
+      : { valid: false, reason: 'Invalid voucher' }
 
     if (result.valid) {
-      setVoucherDiscount(result.discount || 0)
+      setAppliedVoucher(result.voucher.code)
+      setVoucherDiscount(getSubtotal() * (result.voucher.percentage / 100))
       toast.success('Voucher applied!')
     } else {
       setVoucherError(result.reason || 'Invalid voucher')
@@ -75,8 +77,10 @@ export const Cart = ({ loggedIn, action }: Props) => {
     }
   }
 
+  const getSubtotal = () => products.reduce((total, product) => total + product.price * product.quantity, 0)
+
   const createOrder = () => {
-    formAction(products)
+    formAction({ cart: products, voucherCode: appliedVoucher })
 
     toast.success('Bestellung wurde erfolgreich aufgegeben!')
 
