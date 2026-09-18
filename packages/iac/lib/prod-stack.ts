@@ -51,6 +51,8 @@ export class ProdStack extends cdk.Stack {
           persistence.productTable.tableArn,
           persistence.userTable.tableArn,
           persistence.ordersTable.tableArn,
+          persistence.inventoryTable.tableArn,
+          persistence.orderHistoryTable.tableArn,
         ],
       }),
     )

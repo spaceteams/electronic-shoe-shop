@@ -28,7 +28,8 @@ export const authOptions: AuthOptions = {
         }
 
         try {
-          // biome-ignore lint/style/noNonNullAssertion: <explanation>
+          // TODO: extract this entire block into a CognitoService in the adapter layer
+          // biome-ignore lint/style/noNonNullAssertion: env var is injected by CDK
           const clientId = process.env.COGNITO_CLIENT_ID!
 
           const authCommand = new InitiateAuthCommand({

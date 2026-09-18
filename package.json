@@ -1,11 +1,14 @@
 {
   "name": "hiring-test",
   "private": true,
+  "packageManager": "npm@10.2.4",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "fmt": "turbo run fmt",
     "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:ci": "turbo run test:ci",
     "check-types": "turbo run check-types"
   },
   "devDependencies": {

@@ -1,6 +1,7 @@
-import { Euro } from 'lucide-react'
 import type React from 'react'
 import { AddToCart } from '@/_domain/cart/useCases/addToCart/ui/AddToCart'
+import { ProductImage } from '@/_domain/products/useCases/displayProducts/ui/ProductImage'
+import { PriceBadge } from '@/_domain/products/useCases/displayProducts/ui/PriceBadge'
 import type { Product } from '@/_domain/products/model'
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
 export const ProductCard: React.FC<Props> = ({ product }) => {
   return (
     <div className="card w-full bg-base-100 shadow-xl transition-all duration-300 hover:shadow-2xl">
+      <ProductImage product={product} />
       <div className="card-body">
         <h2 className="card-title">
           {product.title || 'Schuh Produkt'}
@@ -28,15 +30,7 @@ export const ProductCard: React.FC<Props> = ({ product }) => {
           ))}
         </div>
 
-        <div className="flex items-center gap-2 mt-2">
-          <Euro className="w-4 h-4" />
-          {product.price && (
-            <span className={`font-medium ${product.salePrice ? 'line-through text-gray-500' : ''}`}>
-              {product.price.toFixed(2)}€
-            </span>
-          )}
-          {product.salePrice && <span className="font-bold text-lg text-primary">{product.salePrice.toFixed(2)}€</span>}
-        </div>
+        <PriceBadge product={product} />
 
         <div className="card-actions justify-end mt-4">
           <AddToCart product={product} />
