@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/authOptions'
 import type { ProductWithQuantity } from '@/_domain/products/model'
 import { orderService } from '@/_domain/cart'
+import { voucherService } from '@/_domain/voucher'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,7 +12,10 @@ type ActionState = {
   values: ProductWithQuantity[]
 }
 
-const createOrder = () => async (_: ActionState, cart: ProductWithQuantity[]) => {
+const createOrder = () => async (
+  _previousState: ActionState,
+  input: { cart: ProductWithQuantity[]; voucherCode?: string },
+) => {
   'use server'
 
   const session = await getServerSession(authOptions)
@@ -28,12 +32,18 @@ const createOrder = () => async (_: ActionState, cart: ProductWithQuantity[]) =>
     }
   }
 
-  await orderService.createOrder(userId, cart)
+  await orderService.createOrder(userId, input.cart, input.voucherCode)
 
   return {
-    values: cart,
+    values: input.cart,
     errors: {},
   }
+}
+
+const validateVoucher = async (code: string) => {
+  'use server'
+
+  return voucherService.validate(code)
 }
 
 export default async function CartPage() {
@@ -41,7 +51,7 @@ export default async function CartPage() {
 
   return (
     <>
-      <Cart loggedIn={!!session} action={createOrder()} />
+      <Cart loggedIn={!!session} action={createOrder()} validateVoucher={validateVoucher} />
     </>
   )
 }
