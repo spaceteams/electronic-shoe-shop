@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "daisyui": "^5",
-    "typescript": "^5",
+    "typescript": "^7",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
