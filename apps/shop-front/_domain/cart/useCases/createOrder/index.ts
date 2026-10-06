@@ -3,6 +3,6 @@ import type { Cart } from '@/_domain/cart/model'
 
 type Repo = Pick<CartRepo, 'createOrder'>
 
-export const createOrderUseCase = async (repo: Repo, userId: string, cart: Cart) => {
-  return repo.createOrder(userId, cart)
+export const createOrderUseCase = async (repo: Repo, userId: string, cart: Cart, voucherCode?: string) => {
+  return repo.createOrder(userId, cart, voucherCode)
 }
